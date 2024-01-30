@@ -1,0 +1,32 @@
+;Main file.
+
+$silent=SetOption('NoVarsInStrings', 'On')
+$silent=SetOption('Explicit','ON')
+$silent=SetOption('CaseSensitivity','ON')
+$silent=SetOption('NoMacrosInStrings','ON')
+ 
+Dim $func_dir,$file_dir,$FileName
+;Define values - alter away
+$func_dir = @scriptdir
+$file_dir = @scriptdir
+$ScriptVersion
+;call functions 
+;For script functionality, please leave this intact.
+$FileName = Dir($func_dir+"\fn*.kix")
+While $FileName <> "" and @ERROR = 0
+ call $func_dir+"\$FileName"
+  $FileName = Dir() ; retrieve next file
+Loop
+
+;Calls to functions / own scriptfunctions:
+
+;next two lines enabled at testphase. 
+;MessageBox ("Logon-Script started","Enable and change this text to enable messagebox with info regarding script running",64,)
+;fnWriteLog("Script started at: " + @TIME+" "+ @DATE+" "+@LServer+" "+@USERID)
+fnRemdrive("1.0") 
+fnNetCheck()
+;fnNetmap($func_dir+"\network.ref")
+fnPrintMig()
+;testphase-line
+;fnWriteLog("Script ended at: " + @TIME+" "+ @DATE+" "+@LServer+" "+@USERID)
+exit 

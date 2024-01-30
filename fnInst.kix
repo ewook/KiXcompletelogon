@@ -1,0 +1,120 @@
+;******************* INSTALLS *******************
+;prg_inst("key","\\searchpath",prgname,$NT or $XP, optional file, optional version on file);,$TriggerGROUP)
+;INSTALLS - WITH file-ver check.
+;prg_inst("regentry...\someprogram","C:\kix\someprogram.exe /Silent",someprogram,$NT,"c:\program files\someprogram\someexec.exe","6.6");,$TriggerGROUP)
+
+;******************* UNINSTALLS *******************
+
+prg_uninst("regentry...\someprog","uninstallstring",someprog,$NT) ;,$TriggerGROUP)
+;---------------------------------
+function prg_inst($prgkey,$prgpath,$prgname,$InstOS,optional $execfile,optional $execversion);,$TriggerGROUP)
+dim $prgkey,$prgpath,$prgname,$execfile,$execversion,$filver,$j,$logpath,$i,$instok,$wr ;$TriggerGROUP
+
+$logpath="C:\kix\inst_logs\" + $prgname + ".log"
+'@@Error = ' + @Error ?
+'@@SError = ' + @SError ? 
+? $logpath ?
+sleep 2
+$instok=0
+$j=0
+$i=0
+if @ProductType = $InstOS
+'@@Error = ' + @Error ?
+'@@SError = ' + @SError ? 
+?"prodtype"
+sleep 1
+	;if INGROUP($TriggerGROUP)
+		if $execfile <> ""
+			'@@Error = ' + @Error ?
+			'@@SError = ' + @SError ? 
+			$filver = GETFILEVERSION( $execfile , "ProductVersion" )
+			 $filver ?; - Installed file-version
+			 $execversion ?; - fileversion set in func
+			if $execversion > $filver ; if fileversion set in func is higher then installed file-version,
+				$j=1 				  ; j equals 1
+			else	
+				$j=0				  ; j equals 0
+			endif
+		endif
+	If NOT keyexist($prgkey) AND $j=0
+		"Installing $prgname, please hold.(no key, and j=0)" ? 
+		shell $prgpath
+		? $prgpath ?
+		'@@Error = ' + @Error ?
+		'@@SError = ' + @SError ? 
+			if keyexist($prgkey)
+				$instok=1
+			
+			else
+				'@@Error = ' + @Error ?
+				'@@SError = ' + @SError ? 
+			endif	
+	endif				
+
+	if $instok=1
+		$Handle=FreeFileHandle() 
+	
+		if $Handle > 0
+			Open($Handle ,$logpath, 5 ) 
+			$wr=WriteLine($Handle,"Program installed on: "+ @WKSTA +" at "+@TIME+" on "+@DATE+@CRLF)
+			$wr=close($Handle)
+			
+			else
+			
+			'@@Error = ' + @Error ?
+			'@@SError = ' + @SError ? 
+			
+		endif	
+	endif
+	
+endif
+
+endfunction
+
+;---------------------------------
+
+;prg_uninst - For uninstallation
+
+function prg_uninst($prgkey,$prgpath,$prgname,$instOS);,TriggerGROUP)
+dim $prgkey, $prgpath, $prgname,$deletekey,$unlogpath,$ij,$wr ;$TriggerGROUP
+
+$ij=0
+$unlogpath="C:\kix\uninst_logs\" + $prgname + ".log"
+? $unlogpath ?
+if @ProductType = $InstOS AND keyexist($prgkey)
+	;If INGROUP($TriggerGROUP)
+		?"Uninstalling $prgname, please hold." ?
+		shell $prgpath
+		sleep 1
+		
+			if keyexist($prgkey)
+				$deletekey = DELTREE($prgkey)
+					if @error = 0
+						$ij=1
+					endif
+		
+					if not $deletekey = 0
+						'@@Error = ' + @Error ?
+						'@@SError = ' + @SError ? 
+						? "Error occured when trying to delete key!"
+					endif
+				
+				else
+				$ij=1
+					
+				endif
+		
+	;endif
+	
+	if $ij=1
+		$Handle=FreeFileHandle()
+			if $Handle > 0
+				Open($Handle,$unlogpath , 5 ) 
+				$wr=WriteLine($Handle,"Program uninstalled on: "+ @WKSTA +" at "+@TIME+" on "+@DATE+@CRLF)
+				$wr=close($Handle)
+			endif
+	endif
+	
+endif
+
+Endfunction

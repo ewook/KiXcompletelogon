@@ -1,0 +1,352 @@
+;fnNetCheck.kix
+;for network references, mappings and settings
+
+;Office
+$x = getipoptions("Macaddress") $x + ' should be 00-aa-cc-cc-cc-xx ' ?
+$y = getipoptions("DefaultGW") $y + 'shoud be 192.168.1.1 ' ?
+$z = getipoptions("DHCPServer") $z ' 'should be ...' ?
+
+
+function fnnetmap($path)
+Dim $i,$domaingrp,$valuename,$value,$donotmap,$group
+ 
+$i = 0
+for each $domaingrp in split(left(readprofilestring($path,"",""), -1),chr(10))
+  if $i = 0 and ingroup($domaingrp)
+    $i = $i + 1 
+    for each $valueName in split(left(readprofilestring($path,$domaingrp,""),-1),chr(10))
+      $value = split(readprofilestring($path,$domaingrp,$valueName),",")
+      $doNotMap = 0
+      for each $group in split($value[2],"|")
+        if left($group,1) = "!" and ingroup(substr($group,2))
+          $doNotMap = 1
+        endif
+      next
+      for each $group in split($value[2],"|")
+        if ingroup($group) - $doNotMap
+          select
+           case left($valueName,7) = "NetShr."
+            use $value[0] $value[1]
+            if @error fnwritelog("Error occured in fnnetmap.kix."+ $value[0] +"|"+ $value[1]+"| "+ @error+" , "+ @serror) endif
+           ;case left($valueName,8) = "SetTime."
+            ;SETTIME "$value[1]"
+            ;if @error fnwritelog("Error occured in fnnetmap.kix."+ $value[0] +"|"+ $value[1]+"| "+ @error+" , "+ @serror) endif
+           case left($valueName,5) = "Home."
+            use $value[0] @HomeShr 
+            if @error fnwritelog("Error occured in fnnetmap.kix."+ $value[0] +"|"+ $value[1]+"| "+ @error+" , "+ @serror) endif
+          endselect
+        endif
+      next
+    next
+  endif
+next
+endfunction
+
+
+
+
+;Function:  
+; GetIPOptions()  
+;  
+;Author:  
+; Allen Powell  
+;  
+;Version:  
+; 1.0 2006/03/15
+;  
+;Action:  
+; Display/Get IP Settings   
+; 
+;Syntax:  
+; GetIPOptions($Setting,optional $remotepc, optional $macaddress) 
+;  
+;Parameters:  
+; $setting - Any valid property from Win32_NetworkAdapterConfiguration class, See examples below and 
+;             http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wmisdk/wmi/win32_networkadapterconfiguration.asp 
+; $remotepc - (Optional) Remote Computer Name 
+; $macaddress - (Optional)  In Computers with more than Network Adapter, provide the MACAddress to target it settings 
+; 
+;Returns: 
+; String containing setting 
+; 
+;Dependencies 
+;  WMI with Windows XP, Windows 2000 Professional, or Windows NT Workstation 4.0 SP4 and later 
+;  Tested with Kixtart 4.52 Beta 
+; 
+;Notes 
+;  If a computer has more than one Network Adapter and the macaddress is not provided it will return the last adapter's information 
+; 
+;Example1:  
+; 
+;? "        Mac Address:  " + getipoptions("Macaddress") 
+;? "     Static Address:  " + getipoptions("StaticIP") 
+;? "       DHCP Enabled:  " + getipoptions("DHCPEnabled") 
+;? "       IPaddress/SM:  " + getipoptions("IPAddress") 
+;? "      IPaddress0/SM:  " + getipoptions("IPAddress0") 
+;? "      IPaddress1/SM:  " + getipoptions("IPAddress1") 
+;? "      IPaddress2/SM:  " + getipoptions("IPAddress2") 
+;? "      IPaddress3/SM:  " + getipoptions("IPAddress3") 
+;? "          DefaultGW:  " + getipoptions("DefaultGW") 
+;? "        DNS Servers:  " + getipoptions("DNSServers") 
+;? "       WINS Servers:  " + getipoptions("WINSServers") 
+;? "          DNSSuffix:  " + getipoptions("DNSDomain") 
+;? "   DNS Search Order:  " + getipoptions("DNSDomainSuffixSearchOrder") 
+;? "        DHCP Server:  " + getipoptions("DHCPServer") 
+;? "DHCP Lease Obtained:  " + getipoptions("DHCPLeaseObtained") 
+;? " DHCP Lease Expires:  " + getipoptions("DHCPLeaseExpires") 
+; 
+;Example2:  List settings for Remote Computers including those with more than one Network Adapter. 
+; Requires EnumNetworkConnections() - http://www.kixtart.org/ubbthreads/showflat.php?Cat=0&Number=138769&an=0&page=0#138769
+; 
+;break on 
+;$remotepc="computername" 
+;for each $nc in Enumnetworkconnections(3,$remotepc) 
+;    $ConnectionName=split($nc,",")[0] 
+;    $MACAddress=split($nc,",")[1] 
+;    $AdapterName=split($nc,",")[2] 
+;    ? "    Connection Name:  " + $connectionname 
+;    ? "         MACAddress:  " + $MACAddress 
+;    ? "       Adapter Name:  " + $AdapterName 
+;    ? "        Mac Address:  " + getipoptions("Macaddress",$remotepc,$macaddress) 
+;    ? "     Static Address:  " + getipoptions("StaticIP",$remotepc,$macaddress) 
+;    ? "       DHCP Enabled:  " + getipoptions("DHCPEnabled",$remotepc,$macaddress) 
+;    ? "       IPaddress/SM:  " + getipoptions("IPAddress",$remotepc,$macaddress) 
+;    ? "      IPaddress0/SM:  " + getipoptions("IPAddress0",$remotepc,$macaddress) 
+;    ? "      IPaddress1/SM:  " + getipoptions("IPAddress1",$remotepc,$macaddress) 
+;    ? "      IPaddress2/SM:  " + getipoptions("IPAddress2",$remotepc,$macaddress) 
+;    ? "      IPaddress3/SM:  " + getipoptions("IPAddress3",$remotepc,$macaddress) 
+;    ? "          DefaultGW:  " + getipoptions("DefaultGW",$remotepc,$macaddress) 
+;    ? "        DNS Servers:  " + getipoptions("DNSServers",$remotepc,$macaddress) 
+;    ? "       WINS Servers:  " + getipoptions("WINSServers",$remotepc,$macaddress) 
+;    ? "          DNSSuffix:  " + getipoptions("DNSDomain",$remotepc,$macaddress) 
+;    ? "   DNS Search Order:  " + getipoptions("DNSDomainSuffixSearchOrder",$remotepc,$macaddress) 
+;    ? "        DHCP Server:  " + getipoptions("DHCPServer",$remotepc,$macaddress) 
+;    ? "DHCP Lease Obtained:  " + getipoptions("DHCPLeaseObtained",$remotepc,$macaddress) 
+;    ? " DHCP Lease Expires:  " + getipoptions("DHCPLeaseExpires",$remotepc,$macaddress) 
+;    ? "---------------" 
+;next 
+; 
+; 
+function GetIPOptions($Setting,optional $remotepc, optional $macaddress)
+  dim $objWMIService, $colitems, $objnetadapter,$targetadapter,$,$allnics,$counter,$Mask,$SN, $IP, $IPAddress,$toggle
+  if $remotepc=""
+    $remotepc="."
+  endif
+  if $macaddress=""
+    $allnics=1
+  endif
+  $objWMIService = GetObject("winmgmts:\\" + $remotepc + "\root\cimv2")
+  if @error
+    exit @error
+  endif
+  $colItems = $objWMIService.ExecQuery("Select * from Win32_NetworkAdapterConfiguration where IPEnabled=-1")
+  For Each $objNetAdapter In $colItems
+    if $macaddress=$objNetAdapter.macaddress or $allnics
+      select
+        case instr($setting,"IPAddress")>0
+          if right($setting,1)="s" or val(right($setting,1))>3 or len($setting)>10
+            $targetadapter=0
+          else
+            $targetadapter=right($setting,1)
+          endif
+          $counter=0
+          for each $IP in $objNetAdapter.IPAddress
+            if "" + $counter=$targetadapter
+              $IPAddress=$IP
+            endif
+            $counter=$counter+1
+          next
+          $counter=0
+          for each $SN in $objNetAdapter.IPSubnet
+            if "" + $counter=$targetadapter
+              $Mask=$SN
+            endif
+            $counter=$counter+1
+          next
+          $GetIPOptions=$IPAddress
+          if $mask
+            $GetIPOptions=$GetIPOptions + "," + $Mask
+          endif  
+        case $setting="WINSServers"
+          $GetIPOptions=$objNetAdapter.WINSPrimaryServer
+          if $objNetAdapter.WINSSecondaryServer<>"" 
+            $GetIPOptions=$GetIPOptions + "," + $objNetAdapter.WINSSecondaryServer
+          endif
+        case 1
+          select
+            case $setting="DefaultGW" or $setting="DefaultGateway" or $setting="Gateway"
+              $setting="DefaultIPGateway"
+            case $setting="DNSServers"
+              $setting="DNSServerSearchOrder"
+            case $setting="StaticIP" or $setting="Static"
+              $setting="DHCPEnabled"
+              $toggle=1
+          endselect
+          $=execute("$" + "GetIPOptions=" + "$" + "objNetAdapter." + $setting)
+          select 
+            case vartype($GetIPOptions)>=8192 ;array 
+              $GetIPOptions=join($GetIPOptions,",")
+            case vartype($GetIPOptions)=11    ;boolean 
+              if $GetIPOptions=0 - $toggle
+                $GetIPOptions="False"
+              else
+                $GetIPOptions="True"
+              endif
+          endselect
+      endselect
+    endif
+  Next
+endfunction
+
+
+;Function:  
+; SetIPOptions(),  
+;  
+;Author  
+; Allen Powell 
+; 
+;Contributors 
+; xpanmanx, Richard H. 
+;  
+;Version:  
+; 1.1.0  
+;  
+;Action:  
+; Set/Modify TCP/IP Options for either DHCP or Static Assignments  
+;  
+;Syntax:  
+; SetIPOptions($Setting,$Value,optional $remotepc, optional $macaddress) 
+;  
+;Parameters:  
+; $setting (Required)  $value (Required) 
+; -------------------  ----------------------------------------  
+;   "EnableDHCP"       0 = IP Address and Subnet Mask only,  1 = IP,SM,DG,DNS,WINS,DNS Domain 
+;   "IPAddress"        String containing IPAddress and Subnet Mask separated by a comma, ie "192.168.1.101,255.255.255.0" 
+;   "DefaultGW"        String containing Default Gateway   
+;   "DNSServers"       String containing DNS Servers, each separated by commas 
+;   "WINSServers"      String containing WINS Servers, each separated by commas 
+;   "DNSDomain"        String containing Domain Name 
+; 
+; $remotepc (Optional) - name of computer, default is local pc 
+; $macaddress (Optional) - target a specific NIC by its MAC Address - String in the format of "##:##:##:##:##:##" 
+; 
+;Returns 
+; 0 - Success 
+; 1 - Failure - check @error for reason  
+;  
+;Dependencies 
+;  WMI with Windows XP, Windows 2000 Professional, or Windows NT Workstation 4.0 SP4 and later 
+;  Tested with Kixtart 4.22, 4.50, 4.51 
+; 
+;Remarks:  
+; V1.1.0 2006/05/04 (Added ability to return errors specific to W32NetworkAdapter - Thanks Richard H) 
+; V1.0.1 2005/10/21 (Added Ability to target a specific NIC by MACAddress)  
+; V1.0.0 2005/08/05 (Original) 
+;  
+;Example:  
+;? "Changing" 
+;"." 
+;$=setipoptions("DefaultGW","192.168.0.1") 
+;"." 
+;$=setipoptions("WINSServers","192.168.0.10,192.168.0.11") 
+;"." 
+;$=setipoptions("DNSServers","192.168.0.10,192.168.0.11") 
+;"." 
+;$=setipoptions("DNSDomain","MyDomain2.Com") 
+;"." 
+;$=setipoptions("IPAddress","192.168.0.101,255.255.255.0") 
+; 
+;if @error=0 
+;  ? "Changed to Static IP" 
+;  gets $ 
+;else 
+;  ? @error 
+;  exit 
+;endif 
+;$=SetIPOptions("EnableDHCP",0) 
+;if @error=0 
+;  ? "Changed to DHCP IP Address, but left other settings alone" 
+;  gets $ 
+;else 
+;  ? @error 
+;  exit  
+;endif 
+;$=SetIPOptions("EnableDHCP",1) 
+;if @error=0 
+;  ? "Changed all settings to DHCP" 
+;  gets $ 
+;else 
+;  ? @error 
+;  exit 
+;endif 
+; 
+ 
+
+function SetIPOptions($Setting,$Value,optional $remotepc, optional $macaddress)
+  dim $objWMIService, $colitems, $objnetadapter,$RC,$IP[0],$SM[0],$WS1,$WS2,$allnics,$settings[0],$errors,$error,$NVIS
+  $errors=1,3010,64,8256,65,4985,66,5894,67,8407,68,9553,69,3951,70,9552,71,9552,72,5762,73,3730,
+          74,3730,75,9616,76,3960,77,3,78,266,79,1338,80,9851,81,4985,82,4985,83,4985,84,9851,85,9851,
+          86,4985,87,4985,88,1707,89,1760,90,1734,91,5,92,2501,93,1760,94,1761,95,2186,96,2186,97,1717,
+          98,4985,100,4985
+  $SetIPOptions=1
+  if $remotepc=""
+    $remotepc="."
+  endif
+  if $macaddress=""
+    $allnics=1
+  endif
+  $objWMIService = GetObject("winmgmts:\\" + $remotepc + "\root\cimv2")
+  if @error
+    exit @error
+  endif
+  $NVIS=Setoption("NoVarsInStrings","ON")
+  $colItems = $objWMIService.ExecQuery("Select * from Win32_NetworkAdapterConfiguration where IPEnabled=-1")
+  For Each $objNetAdapter In $colItems
+    if $macaddress=$objNetAdapter.macaddress or $allnics
+      Select 
+        case $setting="EnableDHCP"
+          if $value
+            redim $settings[3]
+            $settings[0]='SetDNSServerSearchOrder'
+            $settings[1]='SetWINSServer("","")'
+            $settings[2]='SetDNSDomain'
+            $settings[3]='EnableDHCP'
+          else
+            $settings[0]='EnableDHCP'
+          endif
+        case $setting="DNSServers" 
+          $settings[0]='SetDNSServerSearchOrder(split($value,","))'
+        case $setting="WINSServers"
+          $WS1=split($value,",")[0]
+          if ubound(split($value,","))>0
+            $WS2=split($value,",")[1]
+          else
+            $WS2=""
+          endif
+          $settings[0]='SetWINSServer($WS1,$WS2)' 
+        case $setting="DNSDomain"
+          $settings[0]='SetDNSDomain($value)'
+        case $setting="DefaultGW" or $setting="DefaultGateway"
+          $settings[0]='SetGateways(split($value,","))'
+        case $setting="IPAddress"
+          if instr($value,",")>0
+            $IP[0]=split($Value,",")[0]
+            $SM[0]=split($value,",")[1]
+            $settings[0]='EnableStatic($IP, $SM)'
+          endif
+      endselect
+      if $settings[0]<>""
+        for each $setting in $settings
+          $error=0
+          $RC=execute("$" + "Error=" + "$" + "objNetAdapter." + $setting) 
+          if $error>0
+            $NVIS=Setoption("NoVarsInStrings",$NVIS)
+            exit $errors[ascan($errors,$error)+1]      
+          endif
+        next
+        $SetIPOptions=0
+        $NVIS=Setoption("NoVarsInStrings",$NVIS)
+      endif
+    endif
+  Next
+endfunction

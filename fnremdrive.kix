@@ -1,0 +1,14 @@
+;fnRemDrive.
+
+;$checkvalue - version-number ie "1.0"
+Function fnremdrive($checkvalue)
+dim $checkval,$check,$wrcheck
+$checkval="HKEY_CURRENT_USER\Software\ACME"
+  $check=readvalue($checkval,"script")
+  if @error = 0
+   if NOT $check = $checkvalue
+    USE * /DELETE 
+    $wrcheck=writevalue($checkval,"script",$checkvalue,"REG_SZ")
+   endif
+  endif
+endfunction

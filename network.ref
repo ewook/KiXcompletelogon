@@ -1,0 +1,24 @@
+; Rev 1.0.0 
+; Created: 
+;  $Revision:  $ $Date: 200y/mm/dd  $
+;
+; Layout file for logon script
+; 
+ 
+[NetworkResources]
+SetTime   = SetTime.NetworkResources
+Group   = Group.NetworkResources
+ 
+Domain   = Domain.NetworkResources
+;Domain.GroupX = Controlgroups to sort by.
+
+[Controlgroup1]
+Home.1      = h:,@homeShr,some group
+SetTime.1   = ,@lserver,some group
+NetShr.2	= i:,\\netshr\path,some group
+
+[someip]
+Home.1		= h:,\\ip\b$
+
+[anotherip]
+Home.1		= h:

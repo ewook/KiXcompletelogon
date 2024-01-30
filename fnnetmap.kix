@@ -1,0 +1,37 @@
+; Function for DriveMapping using a standard ini-shaped file (ie - network.ref).
+
+
+function fnnetmap($path)
+Dim $i,$domaingrp,$valuename,$value,$donotmap,$group
+ 
+$i = 0
+for each $domaingrp in split(left(readprofilestring($path,"",""), -1),chr(10))
+  if $i = 0 and ingroup($domaingrp)
+    $i = $i + 1 
+    for each $valueName in split(left(readprofilestring($path,$domaingrp,""),-1),chr(10))
+      $value = split(readprofilestring($path,$domaingrp,$valueName),",")
+      $doNotMap = 0
+      for each $group in split($value[2],"|")
+        if left($group,1) = "!" and ingroup(substr($group,2))
+          $doNotMap = 1
+        endif
+      next
+      for each $group in split($value[2],"|")
+        if ingroup($group) - $doNotMap
+          select
+           case left($valueName,7) = "NetShr."
+            use $value[0] $value[1]
+            if @error fnwritelog("Error occured in fnnetmap.kix."+ $value[0] +"|"+ $value[1]+"| "+ @error+" , "+ @serror) endif
+           ;case left($valueName,8) = "SetTime."
+            ;SETTIME "$value[1]"
+            ;if @error fnwritelog("Error occured in fnnetmap.kix."+ $value[0] +"|"+ $value[1]+"| "+ @error+" , "+ @serror) endif
+           case left($valueName,5) = "Home."
+            use $value[0] @HomeShr 
+            if @error fnwritelog("Error occured in fnnetmap.kix."+ $value[0] +"|"+ $value[1]+"| "+ @error+" , "+ @serror) endif
+          endselect
+        endif
+      next
+    next
+  endif
+next
+endfunction

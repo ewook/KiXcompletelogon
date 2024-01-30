@@ -1,0 +1,19 @@
+;fnOfflineCopyScript
+;Usage -
+;makes a up to date copy of the login/on script to the computer
+;running it. 
+;fnOfflineCopyScript("Scheduled,c:\localscriptpath\,1.0")
+;
+;$Mode = "Scheduled,optional c:\localfilepath\,optional 1.0" - setups a scheduled copy to run at selected time.
+;
+;$Mode = "FreeFlyCopy,optional c:\localfilepath\,optional 1.0" - tries to copy on the fly, don't need a UNC-path - @scriptpath should work -
+;valid if "Complete loginscript" is running unaltered. Be careful if you have altered the script.
+;
+;$Mode = "StaticUNC,\\valid\unc\path\,optional c:\localfilepath\,optional 1.0" - array that could be usefull if a different script is to be run
+; in offline-mode - or if FreeFlyCopy somehow does not work.
+
+Function FnOfflineCopyScript($Mode,optional $LocalPath,optional $Version)
+
+Dim
+
+EndFunction

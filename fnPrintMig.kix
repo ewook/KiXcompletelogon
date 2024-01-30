@@ -1,0 +1,37 @@
+;fnPrintMig.
+
+Function fnPrtMig(optional $oldserver,optional $newserver)
+Dim $i, $key,$printer,$server,$prtname,$exec,$wr,$prt_error,$Add_Key
+if NOT KeyExist("HKEY_CURRENT_USER\Software\customer\prt_mgr") AND @ProductType = "Windows XP Professional"
+	$i = 0
+   	$key = "HKEY_CURRENT_USER\Software\Microsoft\Windows NT\CurrentVersion\PrinterPorts"
+    $printer = enumvalue($key, $i)
+	while @error = 0
+  		$server = split($printer,"\")[2]
+   		$prtname = split($printer,"\")[3]
+    select
+ 		case $server = "old-server"
+     	 $exec = DELPRINTERCONNECTION("$printer")
+    	  if $exec 
+    	   ADDPRINTERCONNECTION("\\newserver\$prtname") = 0
+     	   $wr=fnWriteLog("Printmigration for $prtname was a success at: " + @TIME + @DATE + @CRLF )
+           $prt_error = 0
+     	  else 
+           $exec = ADDPRINTERCONNECTION("$printer")
+           $prt_error = 1
+           $wr=fnWriteLog("Printmigration failed - " + @TIME + @DATE + " $printer" + @CRLF ) 
+          endif
+	endselect 
+      $i = $i + 1
+   	  $printer = enumvalue($key, $i)
+    loop
+    
+    if $prt_error = 0
+     $Add_Key = AddKey("HKEY_CURRENT_USER\Software\customer\prt_mgr")
+     $wr=fnWriteLog("Printmigration success, script ended at :" + @TIME + @CRLF ) 
+    else
+     MessageBox ("Logon-Script Print Migration","Error occured during printmigration. ",64,)
+     $wr=fnWriteLog("Printmigration failed, script ended at :" + @TIME + @CRLF )
+    Endif
+Endif
+EndFuction

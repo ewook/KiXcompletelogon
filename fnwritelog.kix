@@ -1,0 +1,20 @@
+;fnWriteLog.
+
+Function fnWriteLog($text)
+   Dim $rc, $loglile, $filehandle
+   $filehandle = "7"
+   $logfile = ExpandEnvironmentVars(%temp%) + "\logon.log"
+   $rc = WriteLine ($filehandle, @Date + " " + @Time " - " + $text + @CRLF)
+   If $rc < 0
+      $rc = Close ($filehandle)
+      $rc = Open ($filehandle, $logfile, 5)
+      Select
+         Case $rc = -1
+            $rc = MessageBox ("Invalid file name (" + $fogfile + ") specified for log file.","Logon Script Error",48)
+         Case $rc = 0
+            fnWriteLog ($text)
+         Case $rc => 0
+            $rc = MessageBox ("Error(" + $rc + ") while attempting to open log file (" + $logfile + ").","Logon Script Error",48)
+      EndSelect
+   EndIf
+EndFunction

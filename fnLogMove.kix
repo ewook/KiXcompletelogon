@@ -1,0 +1,57 @@
+function fnLogMove($SecondPath,$FirstPath,optional $End)
+Dim $Date,$Path,$FileName
+Dim $FileTime,$First,$MoveMe[]
+Dim $x,$Counter
+Dim $Filesize1,$Filesize2,$FilName
+Dim $Error,$Serror,$ErrorFiles,$CounterSecond,$step
+
+$Counter=0
+$CounterSecond=0
+$Date = @DATE
+$step=0
+
+if $End = '' $End = 'log' endif
+$FileName = Dir($FirstPath +'\*.'+$End)
+While $FileName <> "" and @ERROR = 0
+$FileTime = GetFileTime($FirstPath +'\'+ $FileName)
+ $First=Left($FileTime,10)
+   if NOT $First = $Date ReDim Preserve $moveMe[$counter] $moveMe[$counter]=$FileName $counter = $Counter+1 ;$FileName  '  '
+   $FilName=Getfilesize($firstpath +'\'+ $FileName) endif ;'filesize: ' $FilName ?
+   
+ $FileName = Dir() 
+Loop
+
+if $counter=0
+  exit @error
+else
+ for $counter=0 to ubound($MoveMe) step 1
+  if exist($FirstPath+'\'+$moveme[$counter])
+  $filesize1=GETFILESIZE($FirstPath+'\'+$moveme[$counter]); ? 'current filesize first :' $filesize1 ?
+  else exit 1 endif
+  move $FirstPath+'\'+$moveme[$counter] $secondPath+'\'+$moveme[$counter] /c
+  if exist($SecondPath+'\'+$moveme[$counter]) 
+  $filesize2=GETFILESIZE($SecondPath+'\'+$moveme[$counter]) else exit 1 endif ; 'current filesize second:' $filesize2 ?
+    if NOT $filesize1 = $filesize2 
+     Redim Preserve $ErrorFiles[$CounterSecond] $ErrorFiles[$CounterSecond] = $moveme[$counter] 
+     ReDim Preserve $Error[$CounterSecond] $Error[$CounterSecond] = @ERROR
+     ReDim Preserve $Serror[$CounterSecond] $Serror[$CounterSecond] = @SERROR   
+     $CounterSecond=$CounterSecond+1  
+    endif
+
+ next
+endif
+
+if $CounterSecond <> 0
+ fnWriteLog('Error Found with following files: ')
+ Dim $err
+  For each $err in $ErrorFiles
+   fnWriteLog(''File : ' $ErrorFiles[$step] ' . Serror: ' $Serror[$step] ' . error:  ' $Error[$step] '  ')
+   $step=$step+1
+  next
+  else
+  fnWriteLog('No errors found while fnLogMove ')
+endif
+	
+if @error = 18 @error = 0 endif
+
+endfunction
